@@ -47,7 +47,7 @@ func main() {
 	}
 
 	// Create S3 Logger
-	logsApiLogger, err := agent.NewS3Logger()
+	logsApiLogger, err := agent.NewLokiLogger()
 	if err != nil {
 		logger.Fatal(err)
 	}

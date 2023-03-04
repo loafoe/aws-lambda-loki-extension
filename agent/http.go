@@ -100,12 +100,12 @@ func (s *LogsApiHttpListener) Shutdown() {
 // HttpAgent has the listener that receives the logs and the logger that handles the received logs
 type HttpAgent struct {
 	listener *LogsApiHttpListener
-	logger   *S3Logger
+	logger   *LokiLogger
 }
 
 // NewHttpAgent returns an agent to listen and handle logs coming from Logs API for HTTP
 // Make sure the agent is initialized by calling Init(agentId) before subscription for the Logs API.
-func NewHttpAgent(s3Logger *S3Logger, jq *queue.Queue) (*HttpAgent, error) {
+func NewHttpAgent(s3Logger *LokiLogger, jq *queue.Queue) (*HttpAgent, error) {
 
 	logsApiListener, err := NewLogsApiHttpListener(jq)
 	if err != nil {
