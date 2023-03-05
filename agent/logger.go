@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/grafana/loki-client-go/loki"
+	"github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	log "github.com/sirupsen/logrus"
 )
@@ -56,6 +57,15 @@ func NewLokiLogger() (*LokiLogger, error) {
 	cfg, err := loki.NewDefaultConfig(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("error getting default config: %w", err)
+	}
+	// Auth
+	username, _ := os.LookupEnv("LOKI_USERNAME")
+	password, present := os.LookupEnv("LOKI_PASSWORD")
+	if present {
+		cfg.Client.BasicAuth = &config.BasicAuth{
+			Username: username,
+			Password: config.Secret(password),
+		}
 	}
 	client, err := loki.New(cfg)
 	if err != nil {

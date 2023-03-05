@@ -40,8 +40,8 @@ aws lambda update-function-configuration --region <use your region> --function-n
 ```
 
 ## Function Invocation and Extension Execution
-> Note: Your function role should have the AmazonS3FullAccess policy attached.
-
 > Note: You need to add `LOKI_PUSH_ENDPOINT` environment variable to your lambda function. This value is used to configure the Loki client.
+
+> Note: If the Loki endpoint is password protected you'll need to set `LOKI_USERNAME` and `LOKI_PASSWORD` as well.
 
 After invoking the function and receiving the shutdown event, you should now see log messages from the extension written to the Loki cluster.
