@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -37,8 +37,8 @@ func NewLogsApiHttpListener(lq *queue.Queue) (*LogsApiHttpListener, error) {
 }
 
 func ListenOnAddress() string {
-	env_aws_local, ok := os.LookupEnv("AWS_SAM_LOCAL")
-	if ok && "true" == env_aws_local {
+	envAwsLocal, ok := os.LookupEnv("AWS_SAM_LOCAL")
+	if ok && "true" == envAwsLocal {
 		return ":" + DefaultHttpListenerPort
 	}
 
@@ -49,7 +49,7 @@ func ListenOnAddress() string {
 func (s *LogsApiHttpListener) Start() (bool, error) {
 	address := ListenOnAddress()
 	s.httpServer = &http.Server{Addr: address}
-	http.HandleFunc("/", s.http_handler)
+	http.HandleFunc("/", s.httpHandler)
 	go func() {
 		logger.Infof("Serving agent on %s", address)
 		err := s.httpServer.ListenAndServe()
@@ -63,13 +63,13 @@ func (s *LogsApiHttpListener) Start() (bool, error) {
 	return true, nil
 }
 
-// http_handler handles the requests coming from the Logs API.
+// httpHandler handles the requests coming from the Logs API.
 // Everytime Logs API sends logs, this function will read the logs from the response body
 // and put them into a synchronous queue to be read by the main goroutine.
 // Logging or printing besides the error cases below is not recommended if you have subscribed to receive extension logs.
 // Otherwise, logging here will cause Logs API to send new logs for the printed lines which will create an infinite loop.
-func (h *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func (s *LogsApiHttpListener) httpHandler(_ http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Errorf("Error reading body: %+v", err)
 		return
@@ -78,7 +78,7 @@ func (h *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 	fmt.Println("Logs API event received:", string(body))
 
 	// Puts the log message into the queue
-	err = h.logQueue.Put(string(body))
+	err = s.logQueue.Put(string(body))
 	if err != nil {
 		logger.Errorf("Can't push logs to destination: %v", err)
 	}
@@ -87,7 +87,8 @@ func (h *LogsApiHttpListener) http_handler(w http.ResponseWriter, r *http.Reques
 // Shutdown terminates the HTTP server listening for logs
 func (s *LogsApiHttpListener) Shutdown() {
 	if s.httpServer != nil {
-		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
 		err := s.httpServer.Shutdown(ctx)
 		if err != nil {
 			logger.Errorf("Failed to shutdown http server gracefully %s", err)
@@ -120,12 +121,12 @@ func NewHttpAgent(s3Logger *LokiLogger, jq *queue.Queue) (*HttpAgent, error) {
 
 // Init initializes the configuration for the Logs API and subscribes to the Logs API for HTTP
 func (a HttpAgent) Init(agentID string) error {
-	extensions_api_address, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
+	extensionsApiAddress, ok := os.LookupEnv("AWS_LAMBDA_RUNTIME_API")
 	if !ok {
 		return errors.New("AWS_LAMBDA_RUNTIME_API is not set")
 	}
 
-	logsApiBaseUrl := fmt.Sprintf("http://%s", extensions_api_address)
+	logsApiBaseUrl := fmt.Sprintf("http://%s", extensionsApiAddress)
 
 	logsApiClient, err := logsapi.NewClient(logsApiBaseUrl)
 	if err != nil {
