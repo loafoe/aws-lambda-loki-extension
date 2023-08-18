@@ -48,9 +48,9 @@ aws lambda update-function-configuration --region <use your region> --function-n
 
 After invoking the function and receiving the shutdown event, you should now see log messages from the extension written to the Loki cluster.
 
-### User provided log labels
+## User provided log labels
 
-User can set the **LOKI_LOG_LABELS** environment variable to add labels to all logs sent to loki. Each label is a key/value separated by "," character
+User can set the `LOKI_LOG_LABELS` environment variable to add labels to all logs sent to loki. Each label is a key/value separated by "," character
 
 Example: 
 ```shell
