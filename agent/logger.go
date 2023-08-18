@@ -78,11 +78,11 @@ func NewLokiLogger() (*LokiLogger, error) {
 		"function_name": model.LabelValue(fName),
 	}
 
-	// User provided labels in the format of where key/value separated by ";" and key and value seaprated by "="
-	// example value "k1=v1; k2=v2; k3=v3"
+	// User provided labels in the format of where key/value separated by "," and key and value seaprated by "="
+	// example value "k1=v1,k2=v2,k3=v3"
 	labels, present := os.LookupEnv("LOKI_LOG_LABELS")
 	if present {
-		entries := strings.Split(labels, ";")
+		entries := strings.Split(labels, ",")
 		for _, e := range entries {
 			parts := strings.Split(e, "=")
 			labelName := strings.TrimSpace(parts[0])
