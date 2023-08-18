@@ -75,7 +75,7 @@ func NewLokiLogger() (*LokiLogger, error) {
 	lLabels := model.LabelSet{
 		"job":         "lambda",
 		"app":         model.LabelValue(fName),
-		"functioname": model.LabelValue(fName),
+		"function_name": model.LabelValue(fName),
 	}
 
 	// User provided labels in the format of where key/value separated by ";" and key and value seaprated by "="
