@@ -37,6 +37,7 @@ type LokiLogger struct {
 	functionName string
 	endpoint     string
 	key          string
+	logLabels    *model.LabelSet
 	logBuffer    *bytes.Buffer
 }
 
@@ -71,19 +72,39 @@ func NewLokiLogger() (*LokiLogger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating loki client: %w", err)
 	}
+	lLabels := model.LabelSet{
+		"job":         "lambda",
+		"app":         model.LabelValue(fName),
+		"functioname": model.LabelValue(fName),
+	}
+
+	// User provided labels in the format of where key/value separated by ";" and key and value seaprated by "="
+	// example value "k1=v1; k2=v2; k3=v3"
+	labels, present := os.LookupEnv("LOKI_LOG_LABELS")
+	if present {
+		entries := strings.Split(labels, ";")
+		for _, e := range entries {
+			parts := strings.Split(e, "=")
+			labelName := strings.TrimSpace(parts[0])
+			labelValue := strings.TrimSpace(parts[1])
+			lLabels[model.LabelName(labelName)] = model.LabelValue(labelValue)
+
+		}
+	}
 
 	return &LokiLogger{
 		client:       client,
 		functionName: fName,
 		endpoint:     endpoint,
 		key:          key,
+		logLabels:    &lLabels,
 		logBuffer:    buffer,
 	}, nil
 }
 
 // PushLog writes the received logs to a buffer and takes actions depending on the current state of the logger.
 func (l *LokiLogger) PushLog(log string) error {
-	return l.client.Handle(labels, time.Now(), log)
+	return l.client.Handle(*l.logLabels, time.Now(), log)
 }
 
 // Shutdown calls the function that should be executed before the program terminates
