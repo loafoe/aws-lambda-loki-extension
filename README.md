@@ -21,6 +21,7 @@ $ chmod +x bin/extensions/aws-lambda-loki-extension
 ```
 
 ## Layer Setup Process
+
 The extensions .zip file should contain a root directory called `extensions/`, where the extension executables are located. In this sample project we must include the `aws-lambda-loki-extension` binary.
 
 Creating zip package for the extension:
@@ -40,8 +41,18 @@ aws lambda update-function-configuration --region <use your region> --function-n
 ```
 
 ## Function Invocation and Extension Execution
+
 > Note: You need to add `LOKI_PUSH_ENDPOINT` environment variable to your lambda function. This value is used to configure the Loki client.
 
 > Note: If the Loki endpoint is password protected you'll need to set `LOKI_USERNAME` and `LOKI_PASSWORD` as well.
 
 After invoking the function and receiving the shutdown event, you should now see log messages from the extension written to the Loki cluster.
+
+### User provided log labels
+
+User can set the **LOKI_LOG_LABELS** environment variable to add labels to all logs sent to loki. Each label is a key/value separated by "," character
+
+Example: 
+```shell
+LOKI_LOG_LABELS=deployment_color=blue,tenant_name=contoso
+```
