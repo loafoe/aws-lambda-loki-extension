@@ -56,3 +56,26 @@ Example:
 ```shell
 LOKI_LOG_LABELS=deployment_color=blue,tenant_name=contoso
 ```
+## Docker base image layer for Docker based Lambda functions
+```shell
+ docker build -t loki-lambda-extension-layer:1.0 .
+```
+> **_NOTE:_**  This base image is to copy the extension layer to your application base image - it can't be  run directly
+
+Example use of `Loki log` extension base image in Docker based lambda deployment.
+```Dockerfile
+FROM loki-lambda-extension-layer loki-log-extension-layer 
+
+FROM public.ecr.aws/lambda/python:3.8
+########################################
+# Copy application specific code here
+########################################
+
+########################################
+# Copy the Loki log extensions
+WORKDIR /opt
+# Copy log extension
+COPY --from=loki-log-extension-layer /opt .
+########################################
+``` 
+
