@@ -1,6 +1,7 @@
 # Builds the Docker base image for loki log extension to sends the Lambda
 # function logs to configured LOKI_PUSH_ENDPOINT
-FROM golang:1.20 AS BuildStage
+FROM public.ecr.aws/amazonlinux/amazonlinux:2 AS BuildStage
+RUN yum install go -y
 WORKDIR /lokiextension
 COPY . .
 
